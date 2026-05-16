@@ -5,21 +5,21 @@ import lombok.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "line_items")
+@Table(name = "purchase_line_items")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LineItem {
+public class PurchaseLineItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invoice_id", nullable = false)
-    private Invoice invoice;
+    @JoinColumn(name = "purchase_invoice_id", nullable = false)
+    private PurchaseInvoice purchaseInvoice;
 
     @Column(nullable = false, length = 500)
     private String description;
@@ -35,4 +35,6 @@ public class LineItem {
 
     @Column(precision = 12, scale = 2, nullable = false)
     private BigDecimal amount;
+
+    private Long productId;
 }

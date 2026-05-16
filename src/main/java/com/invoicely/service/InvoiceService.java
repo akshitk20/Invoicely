@@ -21,13 +21,16 @@ public class InvoiceService {
     private final InvoiceRepository invoiceRepository;
     private final ClientService clientService;
     private final GstCalculationService gstCalculationService;
+    private final ProductService productService;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
                           ClientService clientService,
-                          GstCalculationService gstCalculationService) {
+                          GstCalculationService gstCalculationService,
+                          ProductService productService) {
         this.invoiceRepository = invoiceRepository;
         this.clientService = clientService;
         this.gstCalculationService = gstCalculationService;
+        this.productService = productService;
     }
 
     public List<Invoice> getInvoicesByUser(User user) {
@@ -78,6 +81,7 @@ public class InvoiceService {
         for (InvoiceCreateDto.LineItemDto itemDto : dto.getLineItems()) {
             LineItem lineItem = LineItem.builder()
                 .description(itemDto.getDescription())
+                .hsnCode(itemDto.getHsnCode())
                 .quantity(itemDto.getQuantity())
                 .rate(itemDto.getRate())
                 .amount(itemDto.getQuantity().multiply(itemDto.getRate()))
@@ -85,7 +89,15 @@ public class InvoiceService {
             invoice.addLineItem(lineItem);
         }
 
-        return invoiceRepository.save(invoice);
+        Invoice saved = invoiceRepository.save(invoice);
+
+        for (InvoiceCreateDto.LineItemDto itemDto : dto.getLineItems()) {
+            if (itemDto.getProductId() != null) {
+                productService.deductStock(itemDto.getProductId(), itemDto.getQuantity());
+            }
+        }
+
+        return saved;
     }
 
     public Invoice markAsPaid(Long invoiceId, LocalDate paymentDate) {

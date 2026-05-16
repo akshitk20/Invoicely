@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Add Supplier</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Add Supplier</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/suppliers}" method="post">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Contact Name *</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Business Name</label>
+                        <input type="text" name="businessName" class="form-control">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">State *</label>
+                        <input type="text" name="state" class="form-control" required placeholder="e.g., Haryana">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">GSTIN</label>
+                        <input type="text" name="gstin" class="form-control" maxlength="15" placeholder="15-digit GSTIN">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save Supplier</button>
+                    <a th:href="@{/suppliers}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

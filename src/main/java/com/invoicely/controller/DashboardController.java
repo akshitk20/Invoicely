@@ -5,6 +5,8 @@ import com.invoicely.model.User;
 import com.invoicely.model.enums.InvoiceStatus;
 import com.invoicely.service.ExpenseService;
 import com.invoicely.service.InvoiceService;
+import com.invoicely.service.ProductService;
+import com.invoicely.service.PurchaseInvoiceService;
 import com.invoicely.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -22,13 +24,19 @@ public class DashboardController {
     private final UserService userService;
     private final InvoiceService invoiceService;
     private final ExpenseService expenseService;
+    private final ProductService productService;
+    private final PurchaseInvoiceService purchaseInvoiceService;
 
     public DashboardController(UserService userService,
                                InvoiceService invoiceService,
-                               ExpenseService expenseService) {
+                               ExpenseService expenseService,
+                               ProductService productService,
+                               PurchaseInvoiceService purchaseInvoiceService) {
         this.userService = userService;
         this.invoiceService = invoiceService;
         this.expenseService = expenseService;
+        this.productService = productService;
+        this.purchaseInvoiceService = purchaseInvoiceService;
     }
 
     @GetMapping("/dashboard")
@@ -70,6 +78,8 @@ public class DashboardController {
         model.addAttribute("unpaidCount", unpaidCount);
         model.addAttribute("overdueCount", overdueCount);
         model.addAttribute("recentInvoices", allInvoices.stream().limit(5).toList());
+        model.addAttribute("lowStockProducts", productService.getLowStockProducts(user));
+        model.addAttribute("inputGstCredit", purchaseInvoiceService.getInputGstCredit(user, monthStart, monthEnd));
 
         return "dashboard";
     }

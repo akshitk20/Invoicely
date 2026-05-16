@@ -60,13 +60,14 @@ public class PdfGenerationService {
             document.add(new Paragraph("\n"));
 
             // Line items table
-            PdfPTable table = new PdfPTable(new float[]{4, 1, 2, 2});
+            PdfPTable table = new PdfPTable(new float[]{3.5f, 1.5f, 1, 2, 2});
             table.setWidthPercentage(100);
 
-            addTableHeader(table, headerFont, "Description", "Qty", "Rate (₹)", "Amount (₹)");
+            addTableHeader(table, headerFont, "Description", "HSN", "Qty", "Rate (₹)", "Amount (₹)");
 
             for (LineItem item : invoice.getLineItems()) {
                 table.addCell(new PdfPCell(new Phrase(item.getDescription(), normalFont)));
+                table.addCell(new PdfPCell(new Phrase(item.getHsnCode() != null ? item.getHsnCode() : "", normalFont)));
                 table.addCell(new PdfPCell(new Phrase(item.getQuantity().stripTrailingZeros().toPlainString(), normalFont)));
                 table.addCell(new PdfPCell(new Phrase(item.getRate().toPlainString(), normalFont)));
                 table.addCell(new PdfPCell(new Phrase(item.getAmount().toPlainString(), normalFont)));

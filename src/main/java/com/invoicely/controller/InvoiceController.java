@@ -24,17 +24,20 @@ public class InvoiceController {
     private final UserService userService;
     private final PdfGenerationService pdfGenerationService;
     private final SubscriptionService subscriptionService;
+    private final ProductService productService;
 
     public InvoiceController(InvoiceService invoiceService,
                              ClientService clientService,
                              UserService userService,
                              PdfGenerationService pdfGenerationService,
-                             SubscriptionService subscriptionService) {
+                             SubscriptionService subscriptionService,
+                             ProductService productService) {
         this.invoiceService = invoiceService;
         this.clientService = clientService;
         this.userService = userService;
         this.pdfGenerationService = pdfGenerationService;
         this.subscriptionService = subscriptionService;
+        this.productService = productService;
     }
 
     @GetMapping
@@ -48,6 +51,7 @@ public class InvoiceController {
     public String showCreateForm(@AuthenticationPrincipal OAuth2User oAuth2User, Model model) {
         User user = userService.getCurrentUser(oAuth2User);
         model.addAttribute("clients", clientService.getClientsByUser(user));
+        model.addAttribute("products", productService.getProductsByUser(user));
         model.addAttribute("invoiceDto", new InvoiceCreateDto());
         model.addAttribute("canCreateInvoice", subscriptionService.canCreateInvoice(user));
         model.addAttribute("monthlyInvoiceCount", subscriptionService.getMonthlyInvoiceCount(user));
@@ -69,6 +73,9 @@ public class InvoiceController {
         } catch (InvoiceLimitExceededException e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
             return "redirect:/subscription/pricing";
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/invoices/new";
         }
     }
 

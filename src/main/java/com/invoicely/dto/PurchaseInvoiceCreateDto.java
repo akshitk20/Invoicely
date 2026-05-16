@@ -10,37 +10,33 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvoiceCreateDto {
+public class PurchaseInvoiceCreateDto {
 
     @NotNull
-    private Long clientId;
+    private Long supplierId;
+
+    private String invoiceNumber;
 
     @NotNull
     private LocalDate invoiceDate;
 
-    private LocalDate dueDate;
-
     @NotNull
     private BigDecimal gstRate;
-
-    private String sacCode;
 
     private String notes;
 
     @NotEmpty
-    private List<LineItemDto> lineItems;
+    private List<PurchaseLineItemDto> lineItems;
 
     @Getter
     @Setter
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class LineItemDto {
+    public static class PurchaseLineItemDto {
         @NotBlank
         private String description;
 
         private String hsnCode;
-
-        private Long productId;
 
         @NotNull
         @DecimalMin("0.01")
@@ -49,5 +45,7 @@ public class InvoiceCreateDto {
         @NotNull
         @DecimalMin("0.01")
         private BigDecimal rate;
+
+        private Long productId;
     }
 }
