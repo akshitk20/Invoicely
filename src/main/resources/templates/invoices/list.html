@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Invoices</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Invoices</h2>
+        <a th:href="@{/invoices/new}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> New Invoice
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Client</th>
+                        <th>Date</th>
+                        <th>Due Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="invoice : ${invoices}">
+                        <td>
+                            <a th:href="@{/invoices/{id}(id=${invoice.id})}" th:text="${invoice.invoiceNumber}">INV-001</a>
+                        </td>
+                        <td th:text="${invoice.client.name}">Client</td>
+                        <td th:text="${invoice.invoiceDate}">2026-01-01</td>
+                        <td th:text="${invoice.dueDate}">2026-01-31</td>
+                        <td th:text="'₹' + ${#numbers.formatDecimal(invoice.total, 1, 2)}">₹0</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${invoice.status.name() == 'PAID' ? 'bg-success' : (invoice.status.name() == 'OVERDUE' ? 'bg-danger' : 'bg-warning')}"
+                                  th:text="${invoice.status}">UNPAID</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-sm btn-outline-secondary" title="Download PDF">
+                                <i class="bi bi-download"></i>
+                            </a>
+                            <form th:if="${invoice.status.name() != 'PAID'}" th:action="@{/invoices/{id}/mark-paid(id=${invoice.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Mark as Paid">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(invoices)}">
+                        <td colspan="7" class="text-center text-muted py-4">No invoices yet. Create your first invoice!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

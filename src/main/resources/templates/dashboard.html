@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Dashboard</h2>
+
+    <!-- Monthly Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Income (This Month)</h6>
+                    <h3 th:text="'₹' + ${#numbers.formatDecimal(monthIncome, 1, 2)}">₹0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Expenses (This Month)</h6>
+                    <h3 th:text="'₹' + ${#numbers.formatDecimal(monthExpenses, 1, 2)}">₹0</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h6 class="card-title">Profit (This Month)</h6>
+                    <h3 th:text="'₹' + ${#numbers.formatDecimal(profit, 1, 2)}">₹0</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GST Collected -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">GST Collected (This Month)</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td>CGST</td>
+                            <td class="text-end" th:text="'₹' + ${#numbers.formatDecimal(totalCgst, 1, 2)}">₹0</td>
+                        </tr>
+                        <tr>
+                            <td>SGST</td>
+                            <td class="text-end" th:text="'₹' + ${#numbers.formatDecimal(totalSgst, 1, 2)}">₹0</td>
+                        </tr>
+                        <tr>
+                            <td>IGST</td>
+                            <td class="text-end" th:text="'₹' + ${#numbers.formatDecimal(totalIgst, 1, 2)}">₹0</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Invoice Status</h6>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td><span class="badge bg-success">Paid</span></td>
+                            <td class="text-end" th:text="${paidCount}">0</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-warning">Unpaid</span></td>
+                            <td class="text-end" th:text="${unpaidCount}">0</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-danger">Overdue</span></td>
+                            <td class="text-end" th:text="${overdueCount}">0</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <a th:href="@{/invoices/new}" class="btn btn-primary me-2">
+                <i class="bi bi-plus-lg"></i> New Invoice
+            </a>
+            <a th:href="@{/expenses/new}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-plus-lg"></i> Log Expense
+            </a>
+            <a th:href="@{/reports}" class="btn btn-outline-secondary">
+                <i class="bi bi-download"></i> Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Invoices -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Recent Invoices</h6>
+            <a th:href="@{/invoices}" class="btn btn-sm btn-outline-primary">View All</a>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Client</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="invoice : ${recentInvoices}">
+                        <td>
+                            <a th:href="@{/invoices/{id}(id=${invoice.id})}" th:text="${invoice.invoiceNumber}">INV-001</a>
+                        </td>
+                        <td th:text="${invoice.client.name}">Client</td>
+                        <td th:text="${invoice.invoiceDate}">2026-01-01</td>
+                        <td th:text="'₹' + ${#numbers.formatDecimal(invoice.total, 1, 2)}">₹0</td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${invoice.status.name() == 'PAID' ? 'bg-success' : (invoice.status.name() == 'OVERDUE' ? 'bg-danger' : 'bg-warning')}"
+                                  th:text="${invoice.status}">UNPAID</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(recentInvoices)}">
+                        <td colspan="5" class="text-center text-muted py-3">No invoices yet. Create your first invoice!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

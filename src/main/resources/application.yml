@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: invoicely
+
+  profiles:
+    active: dev
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+  thymeleaf:
+    cache: false
+
+server:
+  port: 9080
+
+app:
+  upload-dir: ./uploads
+  gst:
+    default-rate: 18.00

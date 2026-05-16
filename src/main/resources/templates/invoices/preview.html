@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Invoice Preview</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 th:text="'Invoice ' + ${invoice.invoiceNumber}">Invoice</h2>
+        <div>
+            <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-primary">
+                <i class="bi bi-download"></i> Download PDF
+            </a>
+            <a th:href="@{/invoices}" class="btn btn-outline-secondary">Back to List</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h6>From:</h6>
+                    <p class="mb-0" th:text="${user.businessName}">Business Name</p>
+                    <p class="mb-0 text-muted" th:text="${user.address}">Address</p>
+                    <p class="mb-0 text-muted" th:text="'State: ' + ${user.state}">State</p>
+                    <p class="mb-0 text-muted" th:text="'GSTIN: ' + (${user.gstin} ?: 'N/A')">GSTIN</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <h6>To:</h6>
+                    <p class="mb-0" th:text="${invoice.client.name}">Client</p>
+                    <p class="mb-0 text-muted" th:text="${invoice.client.address}">Address</p>
+                    <p class="mb-0 text-muted" th:text="'State: ' + ${invoice.client.state}">State</p>
+                    <p class="mb-0 text-muted" th:text="'GSTIN: ' + (${invoice.client.gstin} ?: 'N/A')">GSTIN</p>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <small class="text-muted">Invoice Date</small>
+                    <p th:text="${invoice.invoiceDate}">Date</p>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted">Due Date</small>
+                    <p th:text="${invoice.dueDate}">Due Date</p>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted">Status</small>
+                    <p>
+                        <span class="badge bg-warning" th:text="${invoice.status}">UNPAID</span>
+                    </p>
+                </div>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Qty</th>
+                        <th>Rate</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${invoice.lineItems}">
+                        <td th:text="${item.description}">Item</td>
+                        <td th:text="${item.quantity}">1</td>
+                        <td th:text="${item.rate}">0</td>
+                        <td class="text-end" th:text="${item.amount}">0</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="row justify-content-end">
+                <div class="col-md-4">
+                    <table class="table table-sm">
+                        <tr>
+                            <td>Subtotal</td>
+                            <td class="text-end" th:text="${invoice.subtotal}">0</td>
+                        </tr>
+                        <tr th:if="${invoice.cgst > 0}">
+                            <td>CGST</td>
+                            <td class="text-end" th:text="${invoice.cgst}">0</td>
+                        </tr>
+                        <tr th:if="${invoice.sgst > 0}">
+                            <td>SGST</td>
+                            <td class="text-end" th:text="${invoice.sgst}">0</td>
+                        </tr>
+                        <tr th:if="${invoice.igst > 0}">
+                            <td>IGST</td>
+                            <td class="text-end" th:text="${invoice.igst}">0</td>
+                        </tr>
+                        <tr class="fw-bold">
+                            <td>Total</td>
+                            <td class="text-end" th:text="${invoice.total}">0</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

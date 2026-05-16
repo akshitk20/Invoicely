@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Create Invoice</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Create New Invoice</h2>
+
+    <form th:action="@{/invoices}" method="post" id="invoiceForm">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-header"><h6 class="mb-0">Client & Details</h6></div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Client *</label>
+                                <select name="clientId" class="form-select" required>
+                                    <option value="">Select Client</option>
+                                    <option th:each="client : ${clients}" th:value="${client.id}" th:text="${client.name}">Client</option>
+                                </select>
+                                <a th:href="@{/clients/new}" class="small">+ Add new client</a>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Invoice Date *</label>
+                                <input type="date" name="invoiceDate" class="form-control" required
+                                       th:value="${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Due Date</label>
+                                <input type="date" name="dueDate" class="form-control">
+                                <small class="text-muted">Default: 30 days</small>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">GST Rate (%)</label>
+                                <select name="gstRate" class="form-select" id="gstRate">
+                                    <option value="18">18%</option>
+                                    <option value="12">12%</option>
+                                    <option value="5">5%</option>
+                                    <option value="28">28%</option>
+                                    <option value="0">0% (Export)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">SAC Code</label>
+                                <input type="text" name="sacCode" class="form-control" placeholder="e.g., 998314">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Items -->
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Line Items</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addLineItem()">
+                            <i class="bi bi-plus-lg"></i> Add Item
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div id="lineItems">
+                            <div class="row mb-2 line-item">
+                                <div class="col-md-5">
+                                    <input type="text" name="lineItems[0].description" class="form-control" placeholder="Description" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="number" name="lineItems[0].quantity" class="form-control qty-input" placeholder="Qty" step="0.01" min="0.01" required value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="number" name="lineItems[0].rate" class="form-control rate-input" placeholder="Rate (₹)" step="0.01" min="0.01" required>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLineItem(this)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2" placeholder="Payment terms, bank details, etc."></textarea>
+                </div>
+            </div>
+
+            <!-- Summary Sidebar -->
+            <div class="col-md-4">
+                <div class="card sticky-top" style="top: 80px;">
+                    <div class="card-header"><h6 class="mb-0">Summary</h6></div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Subtotal</td>
+                                <td class="text-end" id="subtotal">₹0.00</td>
+                            </tr>
+                            <tr id="cgstRow">
+                                <td>CGST (<span id="cgstPercent">9</span>%)</td>
+                                <td class="text-end" id="cgstAmount">₹0.00</td>
+                            </tr>
+                            <tr id="sgstRow">
+                                <td>SGST (<span id="sgstPercent">9</span>%)</td>
+                                <td class="text-end" id="sgstAmount">₹0.00</td>
+                            </tr>
+                            <tr id="igstRow" style="display:none;">
+                                <td>IGST (<span id="igstPercent">18</span>%)</td>
+                                <td class="text-end" id="igstAmount">₹0.00</td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td>Total</td>
+                                <td class="text-end" id="totalAmount">₹0.00</td>
+                            </tr>
+                        </table>
+                        <button type="submit" class="btn btn-primary w-100">Create Invoice</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let lineItemIndex = 1;
+
+function addLineItem() {
+    const container = document.getElementById('lineItems');
+    const html = `
+        <div class="row mb-2 line-item">
+            <div class="col-md-5">
+                <input type="text" name="lineItems[${lineItemIndex}].description" class="form-control" placeholder="Description" required>
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="lineItems[${lineItemIndex}].quantity" class="form-control qty-input" placeholder="Qty" step="0.01" min="0.01" required value="1">
+            </div>
+            <div class="col-md-3">
+                <input type="number" name="lineItems[${lineItemIndex}].rate" class="form-control rate-input" placeholder="Rate (₹)" step="0.01" min="0.01" required>
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLineItem(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    lineItemIndex++;
+}
+
+function removeLineItem(btn) {
+    const items = document.querySelectorAll('.line-item');
+    if (items.length > 1) {
+        btn.closest('.line-item').remove();
+        calculateTotals();
+    }
+}
+
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('qty-input') || e.target.classList.contains('rate-input')) {
+        calculateTotals();
+    }
+});
+
+document.getElementById('gstRate').addEventListener('change', calculateTotals);
+
+function calculateTotals() {
+    let subtotal = 0;
+    const items = document.querySelectorAll('.line-item');
+    items.forEach(item => {
+        const qty = parseFloat(item.querySelector('.qty-input').value) || 0;
+        const rate = parseFloat(item.querySelector('.rate-input').value) || 0;
+        subtotal += qty * rate;
+    });
+
+    const gstRate = parseFloat(document.getElementById('gstRate').value) || 0;
+    const halfRate = gstRate / 2;
+    const gst = subtotal * gstRate / 100;
+    const total = subtotal + gst;
+
+    document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
+    document.getElementById('cgstPercent').textContent = halfRate;
+    document.getElementById('sgstPercent').textContent = halfRate;
+    document.getElementById('igstPercent').textContent = gstRate;
+    document.getElementById('cgstAmount').textContent = '₹' + (gst / 2).toFixed(2);
+    document.getElementById('sgstAmount').textContent = '₹' + (gst / 2).toFixed(2);
+    document.getElementById('igstAmount').textContent = '₹' + gst.toFixed(2);
+    document.getElementById('totalAmount').textContent = '₹' + total.toFixed(2);
+}
+</script>
+</body>
+</html>

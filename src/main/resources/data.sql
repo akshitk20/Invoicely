@@ -1,0 +1,20 @@
+-- Common SAC Codes for services in India
+-- This file is for reference; SAC codes are entered manually by users
+
+-- 998311 - Management consulting
+-- 998312 - Business consulting
+-- 998313 - Information technology consulting
+-- 998314 - IT design and development
+-- 998315 - IT infrastructure management
+-- 998316 - IT infrastructure provisioning
+-- 998321 - Publishing on fee/contract basis
+-- 998331 - Accounting/bookkeeping services
+-- 998332 - Auditing services
+-- 998333 - Tax consultancy
+-- 998341 - Architectural services
+-- 998351 - Scientific/technical consulting
+-- 998361 - Advertising services
+-- 998371 - Photography services
+-- 998391 - Speciality design services (UI/UX, graphics)
+-- 998511 - Education/training services
+-- 998599 - Other educational services (tutoring)

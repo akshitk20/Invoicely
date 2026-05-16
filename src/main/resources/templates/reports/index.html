@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Reports</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Reports</h2>
+
+    <div class="row">
+        <!-- GST Summary -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-receipt"></i> GST Summary</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Monthly/quarterly GST breakdown for GSTR-1 filing.</p>
+                    <form th:action="@{/reports/gst}" method="get">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label">From</label>
+                                <input type="date" name="startDate" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">To</label>
+                                <input type="date" name="endDate" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-download"></i> Download Excel
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Income Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-graph-up"></i> Income Report</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Client-wise income breakdown for the period.</p>
+                    <form th:action="@{/reports/income}" method="get">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label">From</label>
+                                <input type="date" name="startDate" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">To</label>
+                                <input type="date" name="endDate" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-download"></i> Download Excel
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Report -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-wallet2"></i> Expense Report</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Category-wise expense breakdown with totals.</p>
+                    <form th:action="@{/reports/expenses}" method="get">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label">From</label>
+                                <input type="date" name="startDate" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">To</label>
+                                <input type="date" name="endDate" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-download"></i> Download Excel
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- CA Export Pack -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="bi bi-file-zip"></i> CA Export Pack</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Complete ZIP file with all reports + invoices + receipts. Send this to your CA!</p>
+                    <form th:action="@{/reports/ca-pack}" method="get">
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label class="form-label">From</label>
+                                <input type="date" name="startDate" class="form-control" required>
+                            </div>
+                            <div class="col">
+                                <label class="form-label">To</label>
+                                <input type="date" name="endDate" class="form-control" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-download"></i> Download CA Pack (ZIP)
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
