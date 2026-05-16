@@ -1,6 +1,5 @@
 package com.invoicely.service;
 
-import com.invoicely.model.Expense;
 import com.invoicely.model.Invoice;
 import com.invoicely.model.User;
 import org.apache.poi.ss.usermodel.*;
@@ -19,11 +18,9 @@ import java.util.stream.Collectors;
 public class ReportService {
 
     private final InvoiceService invoiceService;
-    private final ExpenseService expenseService;
 
-    public ReportService(InvoiceService invoiceService, ExpenseService expenseService) {
+    public ReportService(InvoiceService invoiceService) {
         this.invoiceService = invoiceService;
-        this.expenseService = expenseService;
     }
 
     public byte[] generateGstSummaryExcel(User user, LocalDate start, LocalDate end) throws IOException {
@@ -67,7 +64,6 @@ public class ReportService {
                 grandTotal = grandTotal.add(inv.getTotal());
             }
 
-            // Totals row
             Row totalsRow = sheet.createRow(rowNum);
             totalsRow.createCell(0).setCellValue("TOTAL");
             totalsRow.createCell(3).setCellValue(totalSubtotal.doubleValue());
@@ -121,62 +117,6 @@ public class ReportService {
                 row.createCell(2).setCellValue(total.doubleValue());
                 row.createCell(3).setCellValue(paid.doubleValue());
                 row.createCell(4).setCellValue(total.subtract(paid).doubleValue());
-            }
-
-            for (int i = 0; i < columns.length; i++) {
-                sheet.autoSizeColumn(i);
-            }
-
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            workbook.write(out);
-            return out.toByteArray();
-        }
-    }
-
-    public byte[] generateExpenseReportExcel(User user, LocalDate start, LocalDate end) throws IOException {
-        List<Expense> expenses = expenseService.getExpensesByUserAndDateRange(user, start, end);
-
-        try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-            Sheet sheet = workbook.createSheet("Expense Report");
-
-            CellStyle headerStyle = createHeaderStyle(workbook);
-
-            Row header = sheet.createRow(0);
-            String[] columns = {"Date", "Category", "Description", "Amount (₹)"};
-            for (int i = 0; i < columns.length; i++) {
-                Cell cell = header.createCell(i);
-                cell.setCellValue(columns[i]);
-                cell.setCellStyle(headerStyle);
-            }
-
-            int rowNum = 1;
-            BigDecimal total = BigDecimal.ZERO;
-            for (Expense exp : expenses) {
-                Row row = sheet.createRow(rowNum++);
-                row.createCell(0).setCellValue(exp.getExpenseDate().toString());
-                row.createCell(1).setCellValue(exp.getCategory().getDisplayName());
-                row.createCell(2).setCellValue(exp.getDescription() != null ? exp.getDescription() : "");
-                row.createCell(3).setCellValue(exp.getAmount().doubleValue());
-                total = total.add(exp.getAmount());
-            }
-
-            // Category-wise summary
-            Sheet summarySheet = workbook.createSheet("Category Summary");
-            Row summaryHeader = summarySheet.createRow(0);
-            summaryHeader.createCell(0).setCellValue("Category");
-            summaryHeader.createCell(1).setCellValue("Total (₹)");
-
-            Map<String, BigDecimal> byCategory = expenses.stream()
-                .collect(Collectors.groupingBy(
-                    e -> e.getCategory().getDisplayName(),
-                    Collectors.reducing(BigDecimal.ZERO, Expense::getAmount, BigDecimal::add)
-                ));
-
-            int summaryRow = 1;
-            for (Map.Entry<String, BigDecimal> entry : byCategory.entrySet()) {
-                Row row = summarySheet.createRow(summaryRow++);
-                row.createCell(0).setCellValue(entry.getKey());
-                row.createCell(1).setCellValue(entry.getValue().doubleValue());
             }
 
             for (int i = 0; i < columns.length; i++) {

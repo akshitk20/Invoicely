@@ -38,10 +38,6 @@ public class ExportService {
             byte[] incomeReport = reportService.generateIncomeReportExcel(user, start, end);
             addToZip(zos, "income_summary.xlsx", incomeReport);
 
-            // Expense Report
-            byte[] expenseReport = reportService.generateExpenseReportExcel(user, start, end);
-            addToZip(zos, "expense_summary.xlsx", expenseReport);
-
             // All invoices as individual PDFs
             List<Invoice> invoices = invoiceService.getInvoicesByUserAndDateRange(user, start, end);
             for (Invoice invoice : invoices) {

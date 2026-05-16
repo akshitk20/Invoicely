@@ -3,7 +3,6 @@ package com.invoicely.controller;
 import com.invoicely.model.Invoice;
 import com.invoicely.model.User;
 import com.invoicely.model.enums.InvoiceStatus;
-import com.invoicely.service.ExpenseService;
 import com.invoicely.service.InvoiceService;
 import com.invoicely.service.ProductService;
 import com.invoicely.service.PurchaseInvoiceService;
@@ -23,18 +22,15 @@ public class DashboardController {
 
     private final UserService userService;
     private final InvoiceService invoiceService;
-    private final ExpenseService expenseService;
     private final ProductService productService;
     private final PurchaseInvoiceService purchaseInvoiceService;
 
     public DashboardController(UserService userService,
                                InvoiceService invoiceService,
-                               ExpenseService expenseService,
                                ProductService productService,
                                PurchaseInvoiceService purchaseInvoiceService) {
         this.userService = userService;
         this.invoiceService = invoiceService;
-        this.expenseService = expenseService;
         this.productService = productService;
         this.purchaseInvoiceService = purchaseInvoiceService;
     }
@@ -54,8 +50,6 @@ public class DashboardController {
             .map(Invoice::getTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal monthExpenses = expenseService.getTotalExpenses(user, monthStart, monthEnd);
-
         BigDecimal totalCgst = monthInvoices.stream()
             .map(Invoice::getCgst).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalSgst = monthInvoices.stream()
@@ -67,10 +61,14 @@ public class DashboardController {
         long unpaidCount = allInvoices.stream().filter(i -> i.getStatus() == InvoiceStatus.UNPAID).count();
         long overdueCount = allInvoices.stream().filter(i -> i.getStatus() == InvoiceStatus.OVERDUE).count();
 
+        BigDecimal monthPurchases = purchaseInvoiceService.getByUser(user).stream()
+            .filter(p -> !p.getInvoiceDate().isBefore(monthStart) && !p.getInvoiceDate().isAfter(monthEnd))
+            .map(p -> p.getTotal())
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         model.addAttribute("user", user);
         model.addAttribute("monthIncome", monthIncome);
-        model.addAttribute("monthExpenses", monthExpenses);
-        model.addAttribute("profit", monthIncome.subtract(monthExpenses));
+        model.addAttribute("monthPurchases", monthPurchases);
         model.addAttribute("totalCgst", totalCgst);
         model.addAttribute("totalSgst", totalSgst);
         model.addAttribute("totalIgst", totalIgst);

@@ -11,27 +11,19 @@
 
     <!-- Monthly Summary Cards -->
     <div class="row mb-4">
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card bg-success text-white">
                 <div class="card-body">
-                    <h6 class="card-title">Income (This Month)</h6>
+                    <h6 class="card-title">Sales (This Month)</h6>
                     <h3 th:text="'₹' + ${#numbers.formatDecimal(monthIncome, 1, 2)}">₹0</h3>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="card bg-danger text-white">
                 <div class="card-body">
-                    <h6 class="card-title">Expenses (This Month)</h6>
-                    <h3 th:text="'₹' + ${#numbers.formatDecimal(monthExpenses, 1, 2)}">₹0</h3>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h6 class="card-title">Profit (This Month)</h6>
-                    <h3 th:text="'₹' + ${#numbers.formatDecimal(profit, 1, 2)}">₹0</h3>
+                    <h6 class="card-title">Purchases (This Month)</h6>
+                    <h3 th:text="'₹' + ${#numbers.formatDecimal(monthPurchases, 1, 2)}">₹0</h3>
                 </div>
             </div>
         </div>
@@ -104,8 +96,8 @@
             <a th:href="@{/invoices/new}" class="btn btn-primary me-2">
                 <i class="bi bi-plus-lg"></i> New Invoice
             </a>
-            <a th:href="@{/expenses/new}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-plus-lg"></i> Log Expense
+            <a th:href="@{/purchases/new}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-plus-lg"></i> New Purchase
             </a>
             <a th:href="@{/reports}" class="btn btn-outline-secondary">
                 <i class="bi bi-download"></i> Reports

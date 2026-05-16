@@ -75,36 +75,6 @@
             </div>
         </div>
 
-        <!-- Expense Report -->
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-wallet2"></i> Expense Report</h6>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted">Category-wise expense breakdown with totals.</p>
-                    <form th:action="@{/reports/expenses}" method="get">
-                        <div class="row mb-3">
-                            <div class="col">
-                                <label class="form-label">From</label>
-                                <input type="date" name="startDate" class="form-control" required>
-                            </div>
-                            <div class="col">
-                                <label class="form-label">To</label>
-                                <input type="date" name="endDate" class="form-control" required>
-                            </div>
-                        </div>
-                        <button th:if="${subscriptionTier == 'PRO'}" type="submit" class="btn btn-outline-primary w-100">
-                            <i class="bi bi-download"></i> Download Excel
-                        </button>
-                        <a th:if="${subscriptionTier != 'PRO'}" th:href="@{/subscription/pricing}" class="btn btn-warning w-100">
-                            <i class="bi bi-lock"></i> Upgrade to Download
-                        </a>
-                    </form>
-                </div>
-            </div>
-        </div>
-
         <!-- CA Export Pack -->
         <div class="col-md-6 mb-4">
             <div class="card h-100 border-primary">

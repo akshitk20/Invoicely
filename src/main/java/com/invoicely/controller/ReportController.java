@@ -63,18 +63,6 @@ public class ReportController {
         return buildExcelResponse(report, "income_report.xlsx");
     }
 
-    @GetMapping("/expenses")
-    public ResponseEntity<byte[]> downloadExpenseReport(@AuthenticationPrincipal OAuth2User oAuth2User,
-                                                         @RequestParam LocalDate startDate,
-                                                         @RequestParam LocalDate endDate) throws IOException {
-        User user = userService.getCurrentUser(oAuth2User);
-        if (!subscriptionService.canAccessReports(user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        byte[] report = reportService.generateExpenseReportExcel(user, startDate, endDate);
-        return buildExcelResponse(report, "expense_report.xlsx");
-    }
-
     @GetMapping("/ca-pack")
     public ResponseEntity<byte[]> downloadCaPack(@AuthenticationPrincipal OAuth2User oAuth2User,
                                                   @RequestParam LocalDate startDate,
