@@ -97,6 +97,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Razorpay -->
+        <dependency>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
+            <version>1.4.7</version>
+        </dependency>
+
         <!-- Dev Tools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

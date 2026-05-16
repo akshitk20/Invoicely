@@ -1,6 +1,7 @@
 package com.invoicely.controller;
 
 import com.invoicely.dto.InvoiceCreateDto;
+import com.invoicely.exception.InvoiceLimitExceededException;
 import com.invoicely.model.Invoice;
 import com.invoicely.model.User;
 import com.invoicely.service.*;
@@ -10,6 +11,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 
@@ -21,15 +23,18 @@ public class InvoiceController {
     private final ClientService clientService;
     private final UserService userService;
     private final PdfGenerationService pdfGenerationService;
+    private final SubscriptionService subscriptionService;
 
     public InvoiceController(InvoiceService invoiceService,
                              ClientService clientService,
                              UserService userService,
-                             PdfGenerationService pdfGenerationService) {
+                             PdfGenerationService pdfGenerationService,
+                             SubscriptionService subscriptionService) {
         this.invoiceService = invoiceService;
         this.clientService = clientService;
         this.userService = userService;
         this.pdfGenerationService = pdfGenerationService;
+        this.subscriptionService = subscriptionService;
     }
 
     @GetMapping
@@ -44,15 +49,27 @@ public class InvoiceController {
         User user = userService.getCurrentUser(oAuth2User);
         model.addAttribute("clients", clientService.getClientsByUser(user));
         model.addAttribute("invoiceDto", new InvoiceCreateDto());
+        model.addAttribute("canCreateInvoice", subscriptionService.canCreateInvoice(user));
+        model.addAttribute("monthlyInvoiceCount", subscriptionService.getMonthlyInvoiceCount(user));
         return "invoices/create";
     }
 
     @PostMapping
     public String createInvoice(@AuthenticationPrincipal OAuth2User oAuth2User,
-                                @ModelAttribute InvoiceCreateDto dto) {
+                                @ModelAttribute InvoiceCreateDto dto,
+                                RedirectAttributes redirectAttributes) {
         User user = userService.getCurrentUser(oAuth2User);
-        Invoice invoice = invoiceService.createInvoice(user, dto);
-        return "redirect:/invoices/" + invoice.getId();
+        try {
+            if (!subscriptionService.canCreateInvoice(user)) {
+                throw new InvoiceLimitExceededException(
+                        "Free plan limit reached (3 invoices/month). Upgrade to Pro for unlimited invoices.");
+            }
+            Invoice invoice = invoiceService.createInvoice(user, dto);
+            return "redirect:/invoices/" + invoice.getId();
+        } catch (InvoiceLimitExceededException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/subscription/pricing";
+        }
     }
 
     @GetMapping("/{id}")

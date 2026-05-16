@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Pricing</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Choose Your Plan</h2>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+    <div class="row justify-content-center">
+        <!-- Free Plan -->
+        <div class="col-md-5 mb-4">
+            <div class="card h-100" th:classappend="${user.subscriptionTier == 'FREE' ? 'border-primary' : ''}">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Free</h5>
+                    <h2 class="my-3">&#8377;0<small class="text-muted fs-6">/mo</small></h2>
+                    <ul class="list-unstyled text-start">
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> 3 invoices per month</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> Client management</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> Expense tracking</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> PDF download</li>
+                        <li class="mb-2 text-muted"><i class="bi bi-x-lg text-danger"></i> Reports &amp; exports</li>
+                        <li class="mb-2 text-muted"><i class="bi bi-x-lg text-danger"></i> CA export pack</li>
+                    </ul>
+                    <div th:if="${user.subscriptionTier == 'FREE'}">
+                        <span class="badge bg-primary fs-6">Current Plan</span>
+                        <p class="text-muted mt-2" th:text="${monthlyInvoiceCount + '/3 invoices used this month'}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="col-md-5 mb-4">
+            <div class="card h-100" th:classappend="${user.subscriptionTier == 'PRO' ? 'border-success' : ''}">
+                <div class="card-body text-center">
+                    <span class="badge bg-warning text-dark mb-2">Recommended</span>
+                    <h5 class="card-title">Pro</h5>
+                    <h2 class="my-3">&#8377;499<small class="text-muted fs-6">/mo</small></h2>
+                    <ul class="list-unstyled text-start">
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> <strong>Unlimited</strong> invoices</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> Client management</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> Expense tracking</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> PDF download</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> GST, Income &amp; Expense reports</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> CA export pack (ZIP)</li>
+                    </ul>
+                    <div th:if="${user.subscriptionTier == 'PRO'}">
+                        <span class="badge bg-success fs-6">Current Plan</span>
+                        <a th:href="@{/subscription/manage}" class="btn btn-outline-secondary btn-sm mt-2 d-block">Manage Subscription</a>
+                    </div>
+                    <div th:if="${user.subscriptionTier != 'PRO'}">
+                        <button id="upgradeBtn" class="btn btn-success btn-lg w-100" onclick="startPayment()">
+                            <i class="bi bi-star-fill"></i> Upgrade to Pro
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script th:inline="javascript">
+        const razorpayKeyId = [[${razorpayKeyId}]];
+        const userEmail = [[${user.email}]];
+        const userName = [[${user.name}]];
+
+        function startPayment() {
+            const btn = document.getElementById('upgradeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+
+            fetch('/subscription/create', { method: 'POST', headers: { 'X-CSRF-TOKEN': getCSRFToken() } })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="bi bi-star-fill"></i> Upgrade to Pro';
+                        return;
+                    }
+
+                    var options = {
+                        "key": data.keyId,
+                        "subscription_id": data.subscriptionId,
+                        "name": "Invoicely",
+                        "description": "Pro Plan - Monthly",
+                        "handler": function(response) {
+                            var form = document.createElement('form');
+                            form.method = 'POST';
+                            form.action = '/subscription/verify';
+
+                            var fields = {
+                                'razorpay_subscription_id': response.razorpay_subscription_id,
+                                'razorpay_payment_id': response.razorpay_payment_id,
+                                'razorpay_signature': response.razorpay_signature
+                            };
+
+                            var csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_csrf';
+                            csrfInput.value = getCSRFToken();
+                            form.appendChild(csrfInput);
+
+                            for (var key in fields) {
+                                var input = document.createElement('input');
+                                input.type = 'hidden';
+                                input.name = key;
+                                input.value = fields[key];
+                                form.appendChild(input);
+                            }
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        },
+                        "prefill": { "email": userEmail, "name": userName },
+                        "theme": { "color": "#212529" },
+                        "modal": {
+                            "ondismiss": function() {
+                                btn.disabled = false;
+                                btn.innerHTML = '<i class="bi bi-star-fill"></i> Upgrade to Pro';
+                            }
+                        }
+                    };
+
+                    var rzp = new Razorpay(options);
+                    rzp.open();
+                })
+                .catch(err => {
+                    alert('Error starting payment. Please try again.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-star-fill"></i> Upgrade to Pro';
+                });
+        }
+
+        function getCSRFToken() {
+            var metas = document.getElementsByTagName('meta');
+            for (var i = 0; i < metas.length; i++) {
+                if (metas[i].getAttribute('name') === '_csrf') return metas[i].getAttribute('content');
+            }
+            var input = document.querySelector('input[name="_csrf"]');
+            return input ? input.value : '';
+        }
+    </script>
+</div>
+</body>
+</html>

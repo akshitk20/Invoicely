@@ -35,4 +35,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Invoice> findByStatusAndDueDateBefore(InvoiceStatus status, LocalDate date);
 
     boolean existsByClientId(Long clientId);
+
+    @Query("SELECT COUNT(i) FROM Invoice i WHERE i.user.id = :userId AND i.invoiceDate BETWEEN :monthStart AND :monthEnd")
+    long countByUserIdAndMonth(@Param("userId") Long userId, @Param("monthStart") LocalDate monthStart, @Param("monthEnd") LocalDate monthEnd);
 }

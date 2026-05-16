@@ -9,6 +9,12 @@
 <div layout:fragment="content">
     <h2 class="mb-4">Create New Invoice</h2>
 
+    <div th:if="${!canCreateInvoice}" class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        You've used <span th:text="${monthlyInvoiceCount}"></span>/3 free invoices this month.
+        <a th:href="@{/subscription/pricing}" class="alert-link">Upgrade to Pro</a> for unlimited invoices.
+    </div>
+
     <form th:action="@{/invoices}" method="post" id="invoiceForm">
         <div class="row">
             <div class="col-md-8">

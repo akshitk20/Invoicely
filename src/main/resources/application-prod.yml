@@ -28,6 +28,12 @@ spring:
   thymeleaf:
     cache: true
 
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID}
+  key-secret: ${RAZORPAY_KEY_SECRET}
+  plan-id: ${RAZORPAY_PLAN_ID}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+
 logging:
   level:
     com.invoicely: INFO

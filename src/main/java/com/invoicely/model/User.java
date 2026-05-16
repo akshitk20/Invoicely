@@ -43,6 +43,14 @@ public class User {
     @Builder.Default
     private String subscriptionTier = "FREE";
 
+    @Column(length = 50)
+    private String razorpaySubscriptionId;
+
+    private LocalDateTime subscriptionExpiresAt;
+
+    @Column(length = 20)
+    private String subscriptionStatus;
+
     @Builder.Default
     private Boolean onboardingComplete = false;
 

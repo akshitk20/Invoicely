@@ -25,3 +25,9 @@ app:
   upload-dir: ./uploads
   gst:
     default-rate: 18.00
+
+razorpay:
+  key-id: ${RAZORPAY_KEY_ID:rzp_test_placeholder}
+  key-secret: ${RAZORPAY_KEY_SECRET:placeholder}
+  plan-id: ${RAZORPAY_PLAN_ID:plan_placeholder}
+  webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:placeholder}

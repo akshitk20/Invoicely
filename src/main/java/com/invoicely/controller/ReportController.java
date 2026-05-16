@@ -3,6 +3,7 @@ package com.invoicely.controller;
 import com.invoicely.model.User;
 import com.invoicely.service.ExportService;
 import com.invoicely.service.ReportService;
+import com.invoicely.service.SubscriptionService;
 import com.invoicely.service.UserService;
 import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,13 +22,16 @@ public class ReportController {
     private final ReportService reportService;
     private final ExportService exportService;
     private final UserService userService;
+    private final SubscriptionService subscriptionService;
 
     public ReportController(ReportService reportService,
                             ExportService exportService,
-                            UserService userService) {
+                            UserService userService,
+                            SubscriptionService subscriptionService) {
         this.reportService = reportService;
         this.exportService = exportService;
         this.userService = userService;
+        this.subscriptionService = subscriptionService;
     }
 
     @GetMapping
@@ -40,6 +44,9 @@ public class ReportController {
                                                      @RequestParam LocalDate startDate,
                                                      @RequestParam LocalDate endDate) throws IOException {
         User user = userService.getCurrentUser(oAuth2User);
+        if (!subscriptionService.canAccessReports(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         byte[] report = reportService.generateGstSummaryExcel(user, startDate, endDate);
         return buildExcelResponse(report, "gst_summary.xlsx");
     }
@@ -49,6 +56,9 @@ public class ReportController {
                                                         @RequestParam LocalDate startDate,
                                                         @RequestParam LocalDate endDate) throws IOException {
         User user = userService.getCurrentUser(oAuth2User);
+        if (!subscriptionService.canAccessReports(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         byte[] report = reportService.generateIncomeReportExcel(user, startDate, endDate);
         return buildExcelResponse(report, "income_report.xlsx");
     }
@@ -58,6 +68,9 @@ public class ReportController {
                                                          @RequestParam LocalDate startDate,
                                                          @RequestParam LocalDate endDate) throws IOException {
         User user = userService.getCurrentUser(oAuth2User);
+        if (!subscriptionService.canAccessReports(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         byte[] report = reportService.generateExpenseReportExcel(user, startDate, endDate);
         return buildExcelResponse(report, "expense_report.xlsx");
     }
@@ -67,6 +80,9 @@ public class ReportController {
                                                   @RequestParam LocalDate startDate,
                                                   @RequestParam LocalDate endDate) throws IOException {
         User user = userService.getCurrentUser(oAuth2User);
+        if (!subscriptionService.canAccessReports(user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         byte[] zip = exportService.generateCaExportPack(user, startDate, endDate);
 
         HttpHeaders headers = new HttpHeaders();

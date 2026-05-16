@@ -29,8 +29,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/subscription/webhook")
+            )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/landing", "/css/**", "/js/**", "/images/**", "/icons/**", "/manifest.json", "/sw.js").permitAll()
+                .requestMatchers("/", "/landing", "/css/**", "/js/**", "/images/**", "/icons/**", "/manifest.json", "/sw.js", "/subscription/webhook").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

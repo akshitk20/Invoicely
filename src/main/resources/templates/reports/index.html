@@ -9,6 +9,11 @@
 <div layout:fragment="content">
     <h2 class="mb-4">Reports</h2>
 
+    <div th:if="${subscriptionTier != 'PRO'}" class="alert alert-warning mb-4">
+        <i class="bi bi-lock-fill"></i> Reports are a <strong>Pro</strong> feature.
+        <a th:href="@{/subscription/pricing}" class="alert-link">Upgrade to Pro</a> to download GST summaries, income reports, and CA export packs.
+    </div>
+
     <div class="row">
         <!-- GST Summary -->
         <div class="col-md-6 mb-4">
@@ -29,9 +34,12 @@
                                 <input type="date" name="endDate" class="form-control" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-outline-primary w-100">
+                        <button th:if="${subscriptionTier == 'PRO'}" type="submit" class="btn btn-outline-primary w-100">
                             <i class="bi bi-download"></i> Download Excel
                         </button>
+                        <a th:if="${subscriptionTier != 'PRO'}" th:href="@{/subscription/pricing}" class="btn btn-warning w-100">
+                            <i class="bi bi-lock"></i> Upgrade to Download
+                        </a>
                     </form>
                 </div>
             </div>
@@ -56,9 +64,12 @@
                                 <input type="date" name="endDate" class="form-control" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-outline-primary w-100">
+                        <button th:if="${subscriptionTier == 'PRO'}" type="submit" class="btn btn-outline-primary w-100">
                             <i class="bi bi-download"></i> Download Excel
                         </button>
+                        <a th:if="${subscriptionTier != 'PRO'}" th:href="@{/subscription/pricing}" class="btn btn-warning w-100">
+                            <i class="bi bi-lock"></i> Upgrade to Download
+                        </a>
                     </form>
                 </div>
             </div>
@@ -83,9 +94,12 @@
                                 <input type="date" name="endDate" class="form-control" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-outline-primary w-100">
+                        <button th:if="${subscriptionTier == 'PRO'}" type="submit" class="btn btn-outline-primary w-100">
                             <i class="bi bi-download"></i> Download Excel
                         </button>
+                        <a th:if="${subscriptionTier != 'PRO'}" th:href="@{/subscription/pricing}" class="btn btn-warning w-100">
+                            <i class="bi bi-lock"></i> Upgrade to Download
+                        </a>
                     </form>
                 </div>
             </div>
@@ -110,9 +124,12 @@
                                 <input type="date" name="endDate" class="form-control" required>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button th:if="${subscriptionTier == 'PRO'}" type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-download"></i> Download CA Pack (ZIP)
                         </button>
+                        <a th:if="${subscriptionTier != 'PRO'}" th:href="@{/subscription/pricing}" class="btn btn-warning w-100">
+                            <i class="bi bi-lock"></i> Upgrade to Download
+                        </a>
                     </form>
                 </div>
             </div>
