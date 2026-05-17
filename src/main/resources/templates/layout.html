@@ -59,7 +59,7 @@
                         <a class="nav-link text-warning" th:href="@{/subscription/pricing}"><i class="bi bi-star-fill"></i> Upgrade</a>
                     </li>
                     <li class="nav-item">
-                        <span class="nav-link text-light" sec:authentication="name"></span>
+                        <span class="nav-link text-light" th:text="${#authentication.principal.attributes['name'] ?: #authentication.principal.attributes['email']}"></span>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a>
