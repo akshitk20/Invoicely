@@ -1,8 +1,6 @@
 package com.invoicely.service;
 
-import com.invoicely.model.Invoice;
-import com.invoicely.model.LineItem;
-import com.invoicely.model.User;
+import com.invoicely.model.*;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
@@ -133,5 +131,90 @@ public class PdfGenerationService {
         valueCell.setBorder(Rectangle.NO_BORDER);
         valueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         table.addCell(valueCell);
+    }
+
+    public byte[] generatePurchaseInvoicePdf(PurchaseInvoice purchase, User user) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Document document = new Document(PageSize.A4);
+
+        try {
+            PdfWriter.getInstance(document, baos);
+            document.open();
+
+            Font titleFont = new Font(Font.HELVETICA, 20, Font.BOLD);
+            Font headerFont = new Font(Font.HELVETICA, 12, Font.BOLD);
+            Font normalFont = new Font(Font.HELVETICA, 10, Font.NORMAL);
+            Font smallFont = new Font(Font.HELVETICA, 8, Font.NORMAL);
+
+            Paragraph title = new Paragraph("PURCHASE INVOICE", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            document.add(new Paragraph("\n"));
+
+            document.add(new Paragraph("Invoice No: " + (purchase.getInvoiceNumber() != null ? purchase.getInvoiceNumber() : "N/A"), headerFont));
+            document.add(new Paragraph("Date: " + purchase.getInvoiceDate(), normalFont));
+            document.add(new Paragraph("\n"));
+
+            document.add(new Paragraph("Buyer (You):", headerFont));
+            document.add(new Paragraph(user.getBusinessName() != null ? user.getBusinessName() : user.getName(), normalFont));
+            document.add(new Paragraph(user.getAddress() != null ? user.getAddress() : "", normalFont));
+            document.add(new Paragraph("State: " + user.getState(), normalFont));
+            document.add(new Paragraph("GSTIN: " + (user.getGstin() != null ? user.getGstin() : "N/A"), normalFont));
+            document.add(new Paragraph("\n"));
+
+            document.add(new Paragraph("Supplier:", headerFont));
+            document.add(new Paragraph(purchase.getSupplier().getBusinessName() != null ?
+                purchase.getSupplier().getBusinessName() : purchase.getSupplier().getName(), normalFont));
+            document.add(new Paragraph(purchase.getSupplier().getAddress() != null ?
+                purchase.getSupplier().getAddress() : "", normalFont));
+            document.add(new Paragraph("State: " + purchase.getSupplier().getState(), normalFont));
+            document.add(new Paragraph("GSTIN: " + (purchase.getSupplier().getGstin() != null ?
+                purchase.getSupplier().getGstin() : "N/A"), normalFont));
+            document.add(new Paragraph("\n"));
+
+            PdfPTable table = new PdfPTable(new float[]{3.5f, 1.5f, 1, 2, 2});
+            table.setWidthPercentage(100);
+
+            addTableHeader(table, headerFont, "Description", "HSN", "Qty", "Rate (₹)", "Amount (₹)");
+
+            for (PurchaseLineItem item : purchase.getLineItems()) {
+                table.addCell(new PdfPCell(new Phrase(item.getDescription(), normalFont)));
+                table.addCell(new PdfPCell(new Phrase(item.getHsnCode() != null ? item.getHsnCode() : "", normalFont)));
+                table.addCell(new PdfPCell(new Phrase(item.getQuantity().stripTrailingZeros().toPlainString(), normalFont)));
+                table.addCell(new PdfPCell(new Phrase(item.getRate().toPlainString(), normalFont)));
+                table.addCell(new PdfPCell(new Phrase(item.getAmount().toPlainString(), normalFont)));
+            }
+
+            document.add(table);
+            document.add(new Paragraph("\n"));
+
+            PdfPTable totalsTable = new PdfPTable(2);
+            totalsTable.setWidthPercentage(50);
+            totalsTable.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+            addTotalRow(totalsTable, normalFont, "Subtotal:", "₹" + purchase.getSubtotal().toPlainString());
+
+            if (purchase.getCgst().compareTo(BigDecimal.ZERO) > 0) {
+                addTotalRow(totalsTable, normalFont, "CGST (" + purchase.getGstRate().divide(new BigDecimal("2")).toPlainString() + "%):", "₹" + purchase.getCgst().toPlainString());
+                addTotalRow(totalsTable, normalFont, "SGST (" + purchase.getGstRate().divide(new BigDecimal("2")).toPlainString() + "%):", "₹" + purchase.getSgst().toPlainString());
+            }
+            if (purchase.getIgst().compareTo(BigDecimal.ZERO) > 0) {
+                addTotalRow(totalsTable, normalFont, "IGST (" + purchase.getGstRate().toPlainString() + "%):", "₹" + purchase.getIgst().toPlainString());
+            }
+
+            addTotalRow(totalsTable, headerFont, "Total:", "₹" + purchase.getTotal().toPlainString());
+
+            document.add(totalsTable);
+
+            if (purchase.getNotes() != null && !purchase.getNotes().isEmpty()) {
+                document.add(new Paragraph("\nNotes: " + purchase.getNotes(), smallFont));
+            }
+
+            document.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating purchase invoice PDF", e);
+        }
+
+        return baos.toByteArray();
     }
 }

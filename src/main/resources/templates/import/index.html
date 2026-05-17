@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Bulk Import</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Bulk Import <span class="badge bg-success">PRO</span></h2>
+    <p class="text-muted">Upload a CSV file to create multiple invoices at once. Rows with the same client/supplier and date are grouped into a single invoice.</p>
+
+    <!-- Result Alert -->
+    <div th:if="${result}" class="alert" th:classappend="${result.failedCount == 0 ? 'alert-success' : 'alert-warning'}">
+        <strong th:text="${importType} + ' Import Complete'">Import Complete</strong><br>
+        <span th:text="${result.successCount} + ' invoice(s) created successfully.'"></span>
+        <span th:if="${result.failedCount > 0}" th:text="${result.failedCount} + ' row(s) had errors.'"></span>
+
+        <div th:if="${!result.errors.isEmpty()}" class="mt-2">
+            <strong>Errors:</strong>
+            <ul class="mb-0 small">
+                <li th:each="err : ${result.errors}">
+                    <span th:text="'Row ' + ${err.row} + ': ' + ${err.message}"></span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#salesTab" type="button">
+                <i class="bi bi-receipt"></i> Sales Invoices
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#purchasesTab" type="button">
+                <i class="bi bi-cart-dash"></i> Purchase Invoices
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3">
+        <!-- Sales Tab -->
+        <div class="tab-pane fade show active" id="salesTab">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Import Sales Invoices</h5>
+                    <p class="text-muted">Upload a CSV with your sales data. Clients must already exist in your account.</p>
+
+                    <div class="mb-3">
+                        <strong>CSV Columns:</strong>
+                        <code class="d-block mt-1 p-2 bg-light rounded">client_name, invoice_date, description, hsn_code, quantity, rate, gst_rate, due_date, notes</code>
+                        <small class="text-muted">
+                            Required: client_name, invoice_date, description, quantity, rate.
+                            Optional: hsn_code, gst_rate (default 18%), due_date, notes.
+                        </small>
+                    </div>
+
+                    <a th:href="@{/import/sample/sales}" class="btn btn-outline-secondary btn-sm mb-3">
+                        <i class="bi bi-download"></i> Download Sample CSV
+                    </a>
+
+                    <form th:action="@{/import/sales}" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="salesFile" class="form-label">Select CSV File</label>
+                            <input type="file" class="form-control" id="salesFile" name="file" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> Import Sales
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchases Tab -->
+        <div class="tab-pane fade" id="purchasesTab">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Import Purchase Invoices</h5>
+                    <p class="text-muted">Upload a CSV with your purchase data. Suppliers must already exist in your account.</p>
+
+                    <div class="mb-3">
+                        <strong>CSV Columns:</strong>
+                        <code class="d-block mt-1 p-2 bg-light rounded">supplier_name, invoice_date, description, hsn_code, quantity, rate, gst_rate, product_name, notes</code>
+                        <small class="text-muted">
+                            Required: supplier_name, invoice_date, description, quantity, rate.
+                            Optional: hsn_code, gst_rate (default 18%), product_name (for stock update), notes.
+                        </small>
+                    </div>
+
+                    <a th:href="@{/import/sample/purchases}" class="btn btn-outline-secondary btn-sm mb-3">
+                        <i class="bi bi-download"></i> Download Sample CSV
+                    </a>
+
+                    <form th:action="@{/import/purchases}" method="post" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="purchasesFile" class="form-label">Select CSV File</label>
+                            <input type="file" class="form-control" id="purchasesFile" name="file" accept=".csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload"></i> Import Purchases
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tips -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h6><i class="bi bi-lightbulb"></i> Tips</h6>
+            <ul class="mb-0 small text-muted">
+                <li>Rows with the same client/supplier name and invoice date are grouped into one invoice with multiple line items.</li>
+                <li>Client and supplier names must match exactly (case-insensitive) with existing records.</li>
+                <li>Date format must be <strong>yyyy-MM-dd</strong> (e.g., 2026-01-15).</li>
+                <li>If a product name is specified in purchase imports, stock will be automatically increased.</li>
+                <li>GST type (CGST+SGST or IGST) is auto-determined based on your state and the client/supplier state.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

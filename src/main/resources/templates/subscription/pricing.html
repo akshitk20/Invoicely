@@ -26,6 +26,7 @@
                         <li class="mb-2"><i class="bi bi-check-lg text-success"></i> PDF download</li>
                         <li class="mb-2 text-muted"><i class="bi bi-x-lg text-danger"></i> Reports &amp; exports</li>
                         <li class="mb-2 text-muted"><i class="bi bi-x-lg text-danger"></i> CA export pack</li>
+                        <li class="mb-2 text-muted"><i class="bi bi-x-lg text-danger"></i> Bulk invoice import</li>
                     </ul>
                     <div th:if="${user.subscriptionTier == 'FREE'}">
                         <span class="badge bg-primary fs-6">Current Plan</span>
@@ -49,6 +50,7 @@
                         <li class="mb-2"><i class="bi bi-check-lg text-success"></i> PDF download</li>
                         <li class="mb-2"><i class="bi bi-check-lg text-success"></i> GST &amp; Income reports</li>
                         <li class="mb-2"><i class="bi bi-check-lg text-success"></i> CA export pack (ZIP)</li>
+                        <li class="mb-2"><i class="bi bi-check-lg text-success"></i> Bulk invoice import</li>
                     </ul>
                     <div th:if="${user.subscriptionTier == 'PRO'}">
                         <span class="badge bg-success fs-6">Current Plan</span>
