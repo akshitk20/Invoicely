@@ -240,6 +240,12 @@
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            onClick: function(event, elements) {
+                if (elements.length > 0) {
+                    var datasetIndex = elements[0].datasetIndex;
+                    window.location.href = datasetIndex === 0 ? '/invoices' : '/purchases';
+                }
+            },
             plugins: {
                 legend: { position: 'bottom' }
             },
