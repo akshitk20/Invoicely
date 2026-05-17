@@ -211,49 +211,49 @@
             </table>
         </div>
     </div>
-</div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script th:inline="javascript">
-const labels = /*[[${chartLabels}]]*/ [];
-const salesData = /*[[${chartSales}]]*/ [];
-const purchasesData = /*[[${chartPurchases}]]*/ [];
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+    const labels = /*[[${chartLabels}]]*/ [];
+    const salesData = /*[[${chartSales}]]*/ [];
+    const purchasesData = /*[[${chartPurchases}]]*/ [];
 
-new Chart(document.getElementById('salesChart'), {
-    type: 'bar',
-    data: {
-        labels: labels,
-        datasets: [
-            {
-                label: 'Sales',
-                data: salesData,
-                backgroundColor: 'rgba(25, 135, 84, 0.8)',
-                borderRadius: 4
-            },
-            {
-                label: 'Purchases',
-                data: purchasesData,
-                backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                borderRadius: 4
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { position: 'bottom' }
+    new Chart(document.getElementById('salesChart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Sales',
+                    data: salesData,
+                    backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                    borderRadius: 4
+                },
+                {
+                    label: 'Purchases',
+                    data: purchasesData,
+                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                    borderRadius: 4
+                }
+            ]
         },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(value) { return '₹' + value.toLocaleString('en-IN'); }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) { return '₹' + value.toLocaleString('en-IN'); }
+                    }
                 }
             }
         }
-    }
-});
-</script>
+    });
+    </script>
+</div>
 </body>
 </html>

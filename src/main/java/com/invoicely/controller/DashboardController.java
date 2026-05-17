@@ -80,8 +80,8 @@ public class DashboardController {
 
         // 6-month chart data
         List<String> chartLabels = new ArrayList<>();
-        List<BigDecimal> chartSales = new ArrayList<>();
-        List<BigDecimal> chartPurchases = new ArrayList<>();
+        List<Double> chartSales = new ArrayList<>();
+        List<Double> chartPurchases = new ArrayList<>();
 
         for (int i = 5; i >= 0; i--) {
             LocalDate month = now.minusMonths(i);
@@ -90,16 +90,18 @@ public class DashboardController {
 
             chartLabels.add(month.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
 
-            BigDecimal sales = allInvoices.stream()
+            double sales = allInvoices.stream()
                 .filter(inv -> !inv.getInvoiceDate().isBefore(mStart) && !inv.getInvoiceDate().isAfter(mEnd))
                 .map(Invoice::getTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .doubleValue();
             chartSales.add(sales);
 
-            BigDecimal purchases = allPurchases.stream()
+            double purchases = allPurchases.stream()
                 .filter(p -> !p.getInvoiceDate().isBefore(mStart) && !p.getInvoiceDate().isAfter(mEnd))
                 .map(PurchaseInvoice::getTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .doubleValue();
             chartPurchases.add(purchases);
         }
 
