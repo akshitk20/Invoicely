@@ -32,19 +32,20 @@
                         <a class="nav-link" th:href="@{/dashboard}"><i class="bi bi-speedometer2"></i> Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/invoices}"><i class="bi bi-receipt"></i> Invoices</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/products}"><i class="bi bi-box-seam"></i> Products</a>
+                        <a class="nav-link" th:href="@{/invoices}"><i class="bi bi-receipt"></i> Sales</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/purchases}"><i class="bi bi-cart-dash"></i> Purchases</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/clients}"><i class="bi bi-people"></i> Clients</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/suppliers}"><i class="bi bi-truck"></i> Suppliers</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i> Manage
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/products}"><i class="bi bi-box-seam"></i> Products</a></li>
+                            <li><a class="dropdown-item" th:href="@{/clients}"><i class="bi bi-people"></i> Clients</a></li>
+                            <li><a class="dropdown-item" th:href="@{/suppliers}"><i class="bi bi-truck"></i> Suppliers</a></li>
+                        </ul>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/reports}"><i class="bi bi-file-earmark-bar-graph"></i> Reports</a>
@@ -76,7 +77,7 @@
     <!-- Footer -->
     <footer class="bg-light py-3 mt-5" sec:authorize="isAuthenticated()">
         <div class="container text-center text-muted">
-            <small>Invoicely - GST Invoicing for Indian Freelancers</small>
+            <small>Invoicely - GST Invoicing for Indian Businesses</small>
         </div>
     </footer>
 
