@@ -64,7 +64,9 @@
                         <span class="nav-link text-light" th:text="${#authentication.principal.attributes['name'] ?: #authentication.principal.attributes['email']}"></span>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/logout}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="nav-link btn btn-link"><i class="bi bi-box-arrow-right"></i> Logout</button>
+                        </form>
                     </li>
                 </ul>
             </div>

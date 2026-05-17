@@ -111,4 +111,52 @@ public class InvoiceController {
         invoiceService.markAsPaid(id, paymentDate);
         return "redirect:/invoices";
     }
+
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable Long id,
+                               @AuthenticationPrincipal OAuth2User oAuth2User,
+                               Model model) {
+        User user = userService.getCurrentUser(oAuth2User);
+        Invoice invoice = invoiceService.getById(id);
+        if (!invoice.getUser().getId().equals(user.getId())) {
+            return "redirect:/invoices";
+        }
+        if (invoice.getStatus() == com.invoicely.model.enums.InvoiceStatus.PAID) {
+            return "redirect:/invoices/" + id;
+        }
+        model.addAttribute("invoice", invoice);
+        model.addAttribute("clients", clientService.getClientsByUser(user));
+        model.addAttribute("products", productService.getProductsByUser(user));
+        return "invoices/edit";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String updateInvoice(@PathVariable Long id,
+                                @AuthenticationPrincipal OAuth2User oAuth2User,
+                                @ModelAttribute InvoiceCreateDto dto,
+                                RedirectAttributes redirectAttributes) {
+        User user = userService.getCurrentUser(oAuth2User);
+        try {
+            invoiceService.updateInvoice(user, id, dto);
+            redirectAttributes.addFlashAttribute("success", "Invoice updated successfully");
+            return "redirect:/invoices/" + id;
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/invoices/" + id + "/edit";
+        }
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deleteInvoice(@PathVariable Long id,
+                                @AuthenticationPrincipal OAuth2User oAuth2User,
+                                RedirectAttributes redirectAttributes) {
+        User user = userService.getCurrentUser(oAuth2User);
+        try {
+            invoiceService.deleteInvoice(user, id);
+            redirectAttributes.addFlashAttribute("success", "Invoice deleted successfully");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/invoices";
+    }
 }

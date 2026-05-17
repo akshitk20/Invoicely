@@ -14,6 +14,9 @@
         </a>
     </div>
 
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
     <div class="card">
         <div class="card-body p-0">
             <table class="table table-hover mb-0">
@@ -43,6 +46,9 @@
                                   th:text="${invoice.status}">UNPAID</span>
                         </td>
                         <td>
+                            <a th:if="${invoice.status.name() != 'PAID'}" th:href="@{/invoices/{id}/edit(id=${invoice.id})}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
                             <a th:href="@{/invoices/{id}/pdf(id=${invoice.id})}" class="btn btn-sm btn-outline-secondary" title="Download PDF">
                                 <i class="bi bi-download"></i>
                             </a>

@@ -5,6 +5,7 @@ import com.invoicely.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 
 import java.io.IOException;
 
@@ -72,7 +75,12 @@ public class SecurityConfig {
                 if (!user.getOnboardingComplete()) {
                     response.sendRedirect("/onboarding");
                 } else {
-                    response.sendRedirect("/dashboard");
+                    SavedRequest savedRequest = new HttpSessionRequestCache().getRequest(request, response);
+                    if (savedRequest != null) {
+                        response.sendRedirect(savedRequest.getRedirectUrl());
+                    } else {
+                        response.sendRedirect("/dashboard");
+                    }
                 }
             }
         };

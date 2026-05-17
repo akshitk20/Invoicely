@@ -100,6 +100,73 @@ public class InvoiceService {
         return saved;
     }
 
+    @Transactional
+    public Invoice updateInvoice(User user, Long id, InvoiceCreateDto dto) {
+        Invoice invoice = getById(id);
+        if (!invoice.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Invoice not found: " + id);
+        }
+        if (invoice.getStatus() == InvoiceStatus.PAID) {
+            throw new IllegalStateException("Cannot edit a paid invoice");
+        }
+
+        invoice.getLineItems().clear();
+
+        Client client = clientService.getById(dto.getClientId());
+        GstType gstType = gstCalculationService.determineGstType(user.getState(), client.getState());
+
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (InvoiceCreateDto.LineItemDto item : dto.getLineItems()) {
+            subtotal = subtotal.add(item.getQuantity().multiply(item.getRate()));
+        }
+
+        Map<String, BigDecimal> gstResult = gstCalculationService.calculateGst(
+            subtotal, dto.getGstRate(), gstType);
+
+        invoice.setClient(client);
+        invoice.setInvoiceDate(dto.getInvoiceDate());
+        invoice.setDueDate(dto.getDueDate() != null ? dto.getDueDate() : dto.getInvoiceDate().plusDays(30));
+        invoice.setSubtotal(subtotal);
+        invoice.setCgst(gstResult.get("cgst"));
+        invoice.setSgst(gstResult.get("sgst"));
+        invoice.setIgst(gstResult.get("igst"));
+        invoice.setTotal(gstResult.get("total"));
+        invoice.setGstRate(dto.getGstRate());
+        invoice.setSacCode(dto.getSacCode());
+        invoice.setNotes(dto.getNotes());
+
+        for (InvoiceCreateDto.LineItemDto itemDto : dto.getLineItems()) {
+            LineItem lineItem = LineItem.builder()
+                .description(itemDto.getDescription())
+                .hsnCode(itemDto.getHsnCode())
+                .quantity(itemDto.getQuantity())
+                .rate(itemDto.getRate())
+                .amount(itemDto.getQuantity().multiply(itemDto.getRate()))
+                .build();
+            invoice.addLineItem(lineItem);
+        }
+
+        for (InvoiceCreateDto.LineItemDto itemDto : dto.getLineItems()) {
+            if (itemDto.getProductId() != null) {
+                productService.deductStock(itemDto.getProductId(), itemDto.getQuantity());
+            }
+        }
+
+        return invoiceRepository.save(invoice);
+    }
+
+    @Transactional
+    public void deleteInvoice(User user, Long id) {
+        Invoice invoice = getById(id);
+        if (!invoice.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Invoice not found: " + id);
+        }
+        if (invoice.getStatus() == InvoiceStatus.PAID) {
+            throw new IllegalStateException("Cannot delete a paid invoice");
+        }
+        invoiceRepository.delete(invoice);
+    }
+
     public Invoice markAsPaid(Long invoiceId, LocalDate paymentDate) {
         Invoice invoice = getById(invoiceId);
         invoice.setStatus(InvoiceStatus.PAID);

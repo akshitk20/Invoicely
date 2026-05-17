@@ -3,6 +3,7 @@ package com.invoicely.controller;
 import com.invoicely.dto.PurchaseInvoiceCreateDto;
 import com.invoicely.model.PurchaseInvoice;
 import com.invoicely.model.User;
+import com.invoicely.model.enums.PurchaseStatus;
 import com.invoicely.service.*;
 import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -90,5 +91,53 @@ public class PurchaseInvoiceController {
         headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
 
         return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}/edit")
+    public String showEditForm(@PathVariable Long id,
+                               @AuthenticationPrincipal OAuth2User oAuth2User,
+                               Model model) {
+        User user = userService.getCurrentUser(oAuth2User);
+        PurchaseInvoice purchase = purchaseInvoiceService.getById(id);
+        if (!purchase.getUser().getId().equals(user.getId())) {
+            return "redirect:/purchases";
+        }
+        if (purchase.getStatus() == PurchaseStatus.PAID) {
+            return "redirect:/purchases/" + id;
+        }
+        model.addAttribute("purchase", purchase);
+        model.addAttribute("suppliers", supplierService.getSuppliersByUser(user));
+        model.addAttribute("products", productService.getProductsByUser(user));
+        return "purchases/edit";
+    }
+
+    @PostMapping("/{id}/edit")
+    public String updatePurchase(@PathVariable Long id,
+                                 @AuthenticationPrincipal OAuth2User oAuth2User,
+                                 @ModelAttribute PurchaseInvoiceCreateDto dto,
+                                 RedirectAttributes redirectAttributes) {
+        User user = userService.getCurrentUser(oAuth2User);
+        try {
+            purchaseInvoiceService.updatePurchaseInvoice(user, id, dto);
+            redirectAttributes.addFlashAttribute("success", "Purchase invoice updated successfully");
+            return "redirect:/purchases/" + id;
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/purchases/" + id + "/edit";
+        }
+    }
+
+    @PostMapping("/{id}/delete")
+    public String deletePurchase(@PathVariable Long id,
+                                 @AuthenticationPrincipal OAuth2User oAuth2User,
+                                 RedirectAttributes redirectAttributes) {
+        User user = userService.getCurrentUser(oAuth2User);
+        try {
+            purchaseInvoiceService.deletePurchaseInvoice(user, id);
+            redirectAttributes.addFlashAttribute("success", "Purchase invoice deleted successfully");
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/purchases";
     }
 }

@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -95,13 +97,19 @@ public class SubscriptionService {
 
     public boolean verifyPaymentSignature(String subscriptionId, String paymentId, String signature) {
         try {
-            JSONObject attributes = new JSONObject();
-            attributes.put("razorpay_subscription_id", subscriptionId);
-            attributes.put("razorpay_payment_id", paymentId);
-            attributes.put("razorpay_signature", signature);
-            Utils.verifyPaymentSignature(attributes, razorpayKeySecret);
-            return true;
-        } catch (RazorpayException e) {
+            String payload = paymentId + "|" + subscriptionId;
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKey = new SecretKeySpec(razorpayKeySecret.getBytes(), "HmacSHA256");
+            mac.init(secretKey);
+            byte[] hash = mac.doFinal(payload.getBytes());
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString().equals(signature);
+        } catch (Exception e) {
             log.error("Payment signature verification failed", e);
             return false;
         }

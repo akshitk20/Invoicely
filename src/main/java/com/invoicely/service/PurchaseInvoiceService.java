@@ -97,6 +97,86 @@ public class PurchaseInvoiceService {
         return purchaseInvoiceRepository.save(purchase);
     }
 
+    @Transactional
+    public PurchaseInvoice updatePurchaseInvoice(User user, Long id, PurchaseInvoiceCreateDto dto) {
+        PurchaseInvoice purchase = getById(id);
+        if (!purchase.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Purchase invoice not found: " + id);
+        }
+        if (purchase.getStatus() == PurchaseStatus.PAID) {
+            throw new IllegalStateException("Cannot edit a paid purchase invoice");
+        }
+
+        for (PurchaseLineItem oldItem : purchase.getLineItems()) {
+            if (oldItem.getProductId() != null) {
+                productService.deductStock(oldItem.getProductId(), oldItem.getQuantity());
+            }
+        }
+
+        purchase.getLineItems().clear();
+
+        Supplier supplier = supplierService.getById(dto.getSupplierId());
+        GstType gstType = gstCalculationService.determineGstType(supplier.getState(), user.getState());
+
+        BigDecimal subtotal = BigDecimal.ZERO;
+        for (PurchaseInvoiceCreateDto.PurchaseLineItemDto item : dto.getLineItems()) {
+            subtotal = subtotal.add(item.getQuantity().multiply(item.getRate()));
+        }
+
+        Map<String, BigDecimal> gstResult = gstCalculationService.calculateGst(
+            subtotal, dto.getGstRate(), gstType);
+
+        purchase.setSupplier(supplier);
+        purchase.setInvoiceNumber(dto.getInvoiceNumber());
+        purchase.setInvoiceDate(dto.getInvoiceDate());
+        purchase.setSubtotal(subtotal);
+        purchase.setCgst(gstResult.get("cgst"));
+        purchase.setSgst(gstResult.get("sgst"));
+        purchase.setIgst(gstResult.get("igst"));
+        purchase.setTotal(gstResult.get("total"));
+        purchase.setGstRate(dto.getGstRate());
+        purchase.setNotes(dto.getNotes());
+
+        for (PurchaseInvoiceCreateDto.PurchaseLineItemDto itemDto : dto.getLineItems()) {
+            PurchaseLineItem lineItem = PurchaseLineItem.builder()
+                .description(itemDto.getDescription())
+                .hsnCode(itemDto.getHsnCode())
+                .quantity(itemDto.getQuantity())
+                .rate(itemDto.getRate())
+                .amount(itemDto.getQuantity().multiply(itemDto.getRate()))
+                .productId(itemDto.getProductId())
+                .build();
+            purchase.addLineItem(lineItem);
+        }
+
+        for (PurchaseInvoiceCreateDto.PurchaseLineItemDto itemDto : dto.getLineItems()) {
+            if (itemDto.getProductId() != null) {
+                productService.increaseStock(itemDto.getProductId(), itemDto.getQuantity());
+            }
+        }
+
+        return purchaseInvoiceRepository.save(purchase);
+    }
+
+    @Transactional
+    public void deletePurchaseInvoice(User user, Long id) {
+        PurchaseInvoice purchase = getById(id);
+        if (!purchase.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Purchase invoice not found: " + id);
+        }
+        if (purchase.getStatus() == PurchaseStatus.PAID) {
+            throw new IllegalStateException("Cannot delete a paid purchase invoice");
+        }
+
+        for (PurchaseLineItem item : purchase.getLineItems()) {
+            if (item.getProductId() != null) {
+                productService.deductStock(item.getProductId(), item.getQuantity());
+            }
+        }
+
+        purchaseInvoiceRepository.delete(purchase);
+    }
+
     public BigDecimal getInputGstCredit(User user, LocalDate start, LocalDate end) {
         return purchaseInvoiceRepository.sumGstPaidBetween(user.getId(), start, end);
     }

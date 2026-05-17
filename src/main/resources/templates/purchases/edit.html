@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Edit Purchase Invoice</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <h2 class="mb-4">Edit Purchase Invoice <span th:text="${purchase.invoiceNumber ?: ''}" class="text-muted"></span></h2>
+
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <form th:action="@{/purchases/{id}/edit(id=${purchase.id})}" method="post" id="purchaseForm">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-header"><h6 class="mb-0">Supplier & Details</h6></div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Supplier *</label>
+                                <select name="supplierId" class="form-select" required>
+                                    <option value="">Select Supplier</option>
+                                    <option th:each="s : ${suppliers}" th:value="${s.id}" th:text="${s.name}" th:selected="${s.id == purchase.supplier.id}">Supplier</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Invoice # (Supplier's)</label>
+                                <input type="text" name="invoiceNumber" class="form-control" placeholder="e.g., SINV-001"
+                                       th:value="${purchase.invoiceNumber}">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Invoice Date *</label>
+                                <input type="date" name="invoiceDate" class="form-control" required
+                                       th:value="${purchase.invoiceDate}">
+                            </div>
+                            <div class="col-md-2 mb-3">
+                                <label class="form-label">GST Rate (%)</label>
+                                <select name="gstRate" class="form-select" id="gstRate">
+                                    <option value="18" th:selected="${purchase.gstRate.intValue() == 18}">18%</option>
+                                    <option value="12" th:selected="${purchase.gstRate.intValue() == 12}">12%</option>
+                                    <option value="5" th:selected="${purchase.gstRate.intValue() == 5}">5%</option>
+                                    <option value="28" th:selected="${purchase.gstRate.intValue() == 28}">28%</option>
+                                    <option value="0" th:selected="${purchase.gstRate.intValue() == 0}">0%</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Items -->
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Line Items</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addLineItem()">
+                            <i class="bi bi-plus-lg"></i> Add Item
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2 text-muted small">
+                            <div class="col-md-2">Product</div>
+                            <div class="col-md-3">Description</div>
+                            <div class="col-md-2">HSN</div>
+                            <div class="col-md-1">Qty</div>
+                            <div class="col-md-2">Rate</div>
+                            <div class="col-md-2"></div>
+                        </div>
+                        <div id="lineItems">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control" rows="2" th:text="${purchase.notes}"></textarea>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="col-md-4">
+                <div class="card sticky-top" style="top: 80px;">
+                    <div class="card-header"><h6 class="mb-0">Summary</h6></div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tr>
+                                <td>Subtotal</td>
+                                <td class="text-end" id="subtotal">₹0.00</td>
+                            </tr>
+                            <tr>
+                                <td>GST</td>
+                                <td class="text-end" id="gstAmount">₹0.00</td>
+                            </tr>
+                            <tr class="fw-bold">
+                                <td>Total</td>
+                                <td class="text-end" id="totalAmount">₹0.00</td>
+                            </tr>
+                        </table>
+                        <button type="submit" class="btn btn-primary w-100">Update Purchase Invoice</button>
+                        <a th:href="@{/purchases/{id}(id=${purchase.id})}" class="btn btn-outline-secondary w-100 mt-2">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script th:inline="javascript">
+const productsData = /*[[${products}]]*/ [];
+const productsMap = {};
+productsData.forEach(p => { productsMap[p.id] = p; });
+
+const existingLineItems = /*[[${purchase.lineItems}]]*/ [];
+
+let lineItemIndex = 0;
+
+function createLineItemHtml(index, data) {
+    let productOptions = '<option value="">-- Select --</option>';
+    productsData.forEach(p => {
+        const selected = data.productId && data.productId == p.id ? ' selected' : '';
+        productOptions += `<option value="${p.id}"${selected}>${p.name}</option>`;
+    });
+    return `
+        <div class="row mb-2 line-item">
+            <div class="col-md-2">
+                <select class="form-select form-select-sm product-select" onchange="fillFromProduct(this)">
+                    ${productOptions}
+                </select>
+                <input type="hidden" name="lineItems[${index}].productId" class="product-id-input" value="${data.productId || ''}">
+            </div>
+            <div class="col-md-3">
+                <input type="text" name="lineItems[${index}].description" class="form-control form-control-sm" placeholder="Description" required value="${data.description || ''}">
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="lineItems[${index}].hsnCode" class="form-control form-control-sm" placeholder="HSN" value="${data.hsnCode || ''}">
+            </div>
+            <div class="col-md-1">
+                <input type="number" name="lineItems[${index}].quantity" class="form-control form-control-sm qty-input" placeholder="Qty" step="0.01" min="0.01" required value="${data.quantity || 1}">
+            </div>
+            <div class="col-md-2">
+                <input type="number" name="lineItems[${index}].rate" class="form-control form-control-sm rate-input" placeholder="Rate" step="0.01" min="0.01" required value="${data.rate || ''}">
+            </div>
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeLineItem(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function initLineItems() {
+    const container = document.getElementById('lineItems');
+    if (existingLineItems.length > 0) {
+        existingLineItems.forEach(item => {
+            container.insertAdjacentHTML('beforeend', createLineItemHtml(lineItemIndex, item));
+            lineItemIndex++;
+        });
+    } else {
+        container.insertAdjacentHTML('beforeend', createLineItemHtml(lineItemIndex, {}));
+        lineItemIndex++;
+    }
+    calculateTotals();
+}
+
+function addLineItem() {
+    const container = document.getElementById('lineItems');
+    container.insertAdjacentHTML('beforeend', createLineItemHtml(lineItemIndex, {}));
+    lineItemIndex++;
+}
+
+function fillFromProduct(select) {
+    const row = select.closest('.line-item');
+    const productId = select.value;
+    row.querySelector('.product-id-input').value = productId;
+    if (productId && productsMap[productId]) {
+        const p = productsMap[productId];
+        row.querySelector('[name$=".description"]').value = p.name;
+        row.querySelector('[name$=".hsnCode"]').value = p.hsnCode || '';
+        row.querySelector('[name$=".rate"]').value = p.purchasePrice || '';
+        calculateTotals();
+    }
+}
+
+function removeLineItem(btn) {
+    const items = document.querySelectorAll('.line-item');
+    if (items.length > 1) {
+        btn.closest('.line-item').remove();
+        calculateTotals();
+    }
+}
+
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('qty-input') || e.target.classList.contains('rate-input')) {
+        calculateTotals();
+    }
+});
+document.getElementById('gstRate').addEventListener('change', calculateTotals);
+
+function calculateTotals() {
+    let subtotal = 0;
+    document.querySelectorAll('.line-item').forEach(item => {
+        const qty = parseFloat(item.querySelector('.qty-input').value) || 0;
+        const rate = parseFloat(item.querySelector('.rate-input').value) || 0;
+        subtotal += qty * rate;
+    });
+    const gstRate = parseFloat(document.getElementById('gstRate').value) || 0;
+    const gst = subtotal * gstRate / 100;
+    document.getElementById('subtotal').textContent = '₹' + subtotal.toFixed(2);
+    document.getElementById('gstAmount').textContent = '₹' + gst.toFixed(2);
+    document.getElementById('totalAmount').textContent = '₹' + (subtotal + gst).toFixed(2);
+}
+
+initLineItems();
+</script>
+</body>
+</html>

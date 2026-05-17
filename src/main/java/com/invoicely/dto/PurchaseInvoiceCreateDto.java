@@ -26,7 +26,7 @@ public class PurchaseInvoiceCreateDto {
     private String notes;
 
     @NotEmpty
-    private List<PurchaseLineItemDto> lineItems;
+    private List<PurchaseLineItemDto> lineItems = new java.util.ArrayList<>();
 
     @Getter
     @Setter

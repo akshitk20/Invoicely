@@ -155,7 +155,10 @@ public class DashboardController {
     }
 
     @GetMapping("/landing")
-    public String landing() {
+    public String landing(@AuthenticationPrincipal OAuth2User oAuth2User) {
+        if (oAuth2User != null) {
+            return "redirect:/dashboard";
+        }
         return "landing";
     }
 }
