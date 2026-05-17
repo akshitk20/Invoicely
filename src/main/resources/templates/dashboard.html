@@ -9,9 +9,9 @@
 <div layout:fragment="content">
     <h2 class="mb-4">Dashboard</h2>
 
-    <!-- Monthly Summary Cards -->
+    <!-- Summary Cards -->
     <div class="row mb-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <h6 class="card-title">Sales (This Month)</h6>
@@ -19,7 +19,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <div class="card bg-danger text-white">
                 <div class="card-body">
                     <h6 class="card-title">Purchases (This Month)</h6>
@@ -27,9 +27,52 @@
                 </div>
             </div>
         </div>
+        <div class="col-md-4">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <h6 class="card-title text-muted">Unpaid Receivables</h6>
+                    <h3 class="text-warning" th:text="'₹' + ${#numbers.formatDecimal(unpaidTotal, 1, 2)}">₹0</h3>
+                    <small class="text-muted" th:text="${unpaidCount + overdueCount} + ' invoices pending'">0 invoices pending</small>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- GST Collected & Input Credit -->
+    <!-- Sales vs Purchases Chart -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Sales vs Purchases (Last 6 Months)</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h6 class="mb-0">Top Products</h6>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0" th:if="${!#lists.isEmpty(topProducts)}">
+                        <tbody>
+                            <tr th:each="p : ${topProducts}">
+                                <td th:text="${p.name}">Product</td>
+                                <td class="text-end text-muted" th:text="${p.quantity} + ' sold'">0 sold</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div th:if="${#lists.isEmpty(topProducts)}" class="text-center text-muted py-4">
+                        <small>No sales yet</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GST & Status Row -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card">
@@ -169,5 +212,48 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+const labels = /*[[${chartLabels}]]*/ [];
+const salesData = /*[[${chartSales}]]*/ [];
+const purchasesData = /*[[${chartPurchases}]]*/ [];
+
+new Chart(document.getElementById('salesChart'), {
+    type: 'bar',
+    data: {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Sales',
+                data: salesData,
+                backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                borderRadius: 4
+            },
+            {
+                label: 'Purchases',
+                data: purchasesData,
+                backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                borderRadius: 4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) { return '₹' + value.toLocaleString('en-IN'); }
+                }
+            }
+        }
+    }
+});
+</script>
 </body>
 </html>

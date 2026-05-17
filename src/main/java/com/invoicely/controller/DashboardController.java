@@ -1,6 +1,8 @@
 package com.invoicely.controller;
 
 import com.invoicely.model.Invoice;
+import com.invoicely.model.LineItem;
+import com.invoicely.model.PurchaseInvoice;
 import com.invoicely.model.User;
 import com.invoicely.model.enums.InvoiceStatus;
 import com.invoicely.service.InvoiceService;
@@ -15,7 +17,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
+import java.time.format.TextStyle;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Controller
 public class DashboardController {
@@ -61,10 +65,63 @@ public class DashboardController {
         long unpaidCount = allInvoices.stream().filter(i -> i.getStatus() == InvoiceStatus.UNPAID).count();
         long overdueCount = allInvoices.stream().filter(i -> i.getStatus() == InvoiceStatus.OVERDUE).count();
 
-        BigDecimal monthPurchases = purchaseInvoiceService.getByUser(user).stream()
+        List<PurchaseInvoice> allPurchases = purchaseInvoiceService.getByUser(user);
+
+        BigDecimal monthPurchases = allPurchases.stream()
             .filter(p -> !p.getInvoiceDate().isBefore(monthStart) && !p.getInvoiceDate().isAfter(monthEnd))
-            .map(p -> p.getTotal())
+            .map(PurchaseInvoice::getTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Unpaid total (UNPAID + OVERDUE invoices)
+        BigDecimal unpaidTotal = allInvoices.stream()
+            .filter(i -> i.getStatus() == InvoiceStatus.UNPAID || i.getStatus() == InvoiceStatus.OVERDUE)
+            .map(Invoice::getTotal)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 6-month chart data
+        List<String> chartLabels = new ArrayList<>();
+        List<BigDecimal> chartSales = new ArrayList<>();
+        List<BigDecimal> chartPurchases = new ArrayList<>();
+
+        for (int i = 5; i >= 0; i--) {
+            LocalDate month = now.minusMonths(i);
+            LocalDate mStart = month.withDayOfMonth(1);
+            LocalDate mEnd = month.withDayOfMonth(month.lengthOfMonth());
+
+            chartLabels.add(month.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH));
+
+            BigDecimal sales = allInvoices.stream()
+                .filter(inv -> !inv.getInvoiceDate().isBefore(mStart) && !inv.getInvoiceDate().isAfter(mEnd))
+                .map(Invoice::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            chartSales.add(sales);
+
+            BigDecimal purchases = allPurchases.stream()
+                .filter(p -> !p.getInvoiceDate().isBefore(mStart) && !p.getInvoiceDate().isAfter(mEnd))
+                .map(PurchaseInvoice::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            chartPurchases.add(purchases);
+        }
+
+        // Top 5 products by quantity sold
+        Map<String, BigDecimal> productQtyMap = new LinkedHashMap<>();
+        for (Invoice inv : allInvoices) {
+            if (inv.getLineItems() != null) {
+                for (LineItem item : inv.getLineItems()) {
+                    productQtyMap.merge(item.getDescription(), item.getQuantity(), BigDecimal::add);
+                }
+            }
+        }
+        List<Map<String, Object>> topProducts = productQtyMap.entrySet().stream()
+            .sorted(Map.Entry.<String, BigDecimal>comparingByValue().reversed())
+            .limit(5)
+            .map(e -> {
+                Map<String, Object> m = new HashMap<>();
+                m.put("name", e.getKey());
+                m.put("quantity", e.getValue());
+                return m;
+            })
+            .collect(Collectors.toList());
 
         model.addAttribute("user", user);
         model.addAttribute("monthIncome", monthIncome);
@@ -75,6 +132,11 @@ public class DashboardController {
         model.addAttribute("paidCount", paidCount);
         model.addAttribute("unpaidCount", unpaidCount);
         model.addAttribute("overdueCount", overdueCount);
+        model.addAttribute("unpaidTotal", unpaidTotal);
+        model.addAttribute("chartLabels", chartLabels);
+        model.addAttribute("chartSales", chartSales);
+        model.addAttribute("chartPurchases", chartPurchases);
+        model.addAttribute("topProducts", topProducts);
         model.addAttribute("recentInvoices", allInvoices.stream().limit(5).toList());
         model.addAttribute("lowStockProducts", productService.getLowStockProducts(user));
         model.addAttribute("inputGstCredit", purchaseInvoiceService.getInputGstCredit(user, monthStart, monthEnd));
