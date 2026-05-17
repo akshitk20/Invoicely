@@ -225,13 +225,13 @@
             datasets: [
                 {
                     label: 'Sales',
-                    data: salesData,
+                    data: purchasesData,
                     backgroundColor: 'rgba(25, 135, 84, 0.8)',
                     borderRadius: 4
                 },
                 {
                     label: 'Purchases',
-                    data: purchasesData,
+                    data: salesData,
                     backgroundColor: 'rgba(220, 53, 69, 0.8)',
                     borderRadius: 4
                 }
@@ -242,8 +242,8 @@
             maintainAspectRatio: false,
             onClick: function(event, elements) {
                 if (elements.length > 0) {
-                    var datasetIndex = elements[0].datasetIndex;
-                    window.location.href = datasetIndex === 0 ? '/purchases' : '/invoices';
+                    var label = this.data.datasets[elements[0].datasetIndex].label;
+                    window.location.href = label === 'Sales' ? '/invoices' : '/purchases';
                 }
             },
             plugins: {
